@@ -84,23 +84,8 @@ source "proxmox-iso" "wazuh_manager" {
   # =========================
   # Boot & unattended install (Ubuntu autoinstall)
   # =========================
-  boot_wait = "8s"
-
-  # NOTE: Boot command may need slight adjustment depending on the ISO/GRUB screen on your console.
-  # This is a common pattern for Ubuntu live-server autoinstall.
-boot_command = [
-  "<esc><wait>",
-  "e<wait>",
-
-  # Trong GRUB editor: dòng thứ 2 thường là "linux ..."
-  "<down><end><wait>",
-
-  # QUAN TRỌNG: quote ds=... để tránh lỗi parse dấu ';' trong GRUB
-  " autoinstall ip=dhcp ipv6.disable=1 'ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/' ---<wait>",
-
-  # Ctrl+X thường ổn định hơn F10 trên console PVE
-  "<ctrl+x><wait>"
-]
+  boot_command = ["e<wait><down><down><down><end> autoinstall 'ds=nocloud;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'<F10>"]
+  boot_wait    = "10s"
 
   # =========================
   # SSH communicator
