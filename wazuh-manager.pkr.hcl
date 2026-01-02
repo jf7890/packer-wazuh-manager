@@ -88,13 +88,18 @@ source "proxmox-iso" "wazuh_manager" {
 
   # NOTE: Boot command may need slight adjustment depending on the ISO/GRUB screen on your console.
   # This is a common pattern for Ubuntu live-server autoinstall.
-  boot_command = [
-    "<esc><wait>",
-    "e<wait>",
-    "<down><down><down><end>",
-    " autoinstall ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/",
-    "<f10><wait>"
-  ]
+boot_command = [
+  "<esc><wait>",
+  "e<wait>",
+
+  # Trong GRUB editor: xuống đúng dòng bắt đầu bằng "linux ..."
+  "<down><end><wait>",
+
+  # Append kernel params (nhớ có trailing slash và '---')
+  " autoinstall ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ip=dhcp ipv6.disable=1 ---<wait>",
+
+  "<f10><wait>"
+]
 
   # =========================
   # SSH communicator
