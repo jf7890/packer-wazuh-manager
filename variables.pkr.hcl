@@ -112,6 +112,6 @@ variable "ssh_timeout" {
 # Optional: interface name inside guest to help plugin pick IP (can override if needed)
 variable "vm_interface" {
   type        = string
-  default     = "ens18"
+  default     = "eth0"
   description = "Guest NIC name used to detect IP (adjust if your guest uses a different name)."
 }
