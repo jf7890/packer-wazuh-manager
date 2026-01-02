@@ -1,7 +1,7 @@
 # ===== Proxmox connection =====
 proxmox_url      = "https://10.10.100.1:8006/api2/json"
 proxmox_username = "root@pam!packer"
-proxmox_token    = "REPLACE_ME_TOKEN_SECRET"
+proxmox_token    = "28786dd2-1eed-44e6-b8a4-dc2221ce384d"
 proxmox_node     = "homelab"
 proxmox_insecure_skip_tls_verify = true
 vm_id = 0
@@ -18,10 +18,10 @@ disk_size         = "40G"
 
 # ===== Storage / Network =====
 iso_storage_pool        = "hdd-data"
-mgmt_bridge             = "vmbr10"
+mgmt_bridge             = "blue"
 cloud_init_storage_pool = "local-lvm"
 
 # ===== SSH key-based =====
 ssh_username         = "blue"
 ssh_private_key_file = "~/.ssh/id_ed25519"
-vm_interface         = "ens18"
+vm_interface         = "eth0"

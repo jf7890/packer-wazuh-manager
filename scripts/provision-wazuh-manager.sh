@@ -4,6 +4,71 @@ set -euo pipefail
 # Silence service operations to avoid occupying SSH session.
 export DEBIAN_FRONTEND=noninteractive
 
+# Set static ip for Wazuh manager
+NET_IF="eth0"
+IP_ADDR="10.10.172.10/24"
+GATEWAY="10.10.172.1"
+DNS_SERVERS="1.1.1.1"
+
+NETPLAN_FILE="/etc/netplan/01-static-ip.yaml"
+
+echo "[+] Configuring static IP for ${NET_IF}..."
+
+cat > "${NETPLAN_FILE}" <<EOF
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ${NET_IF}:
+      dhcp4: false
+      addresses:
+        - ${IP_ADDR}
+      gateway4: ${GATEWAY}
+      nameservers:
+        addresses:
+          - ${DNS_SERVERS}
+EOF
+
+chmod 600 "${NETPLAN_FILE}"
+
+echo "[+] Applying netplan..."
+netplan generate > /dev/null 2>&1 || true
+netplan apply > /dev/null 2>&1 || true
+
+echo "[+] Restarting systemd-networkd..."
+systemctl restart systemd-networkd > /dev/null 2>&1 || trueNET_IF="ens18"
+IP_ADDR="10.10.172.10/24"
+GATEWAY="10.10.172.1"
+DNS_SERVERS="1.1.1.1"
+
+NETPLAN_FILE="/etc/netplan/01-static-ip.yaml"
+
+echo "[+] Configuring static IP for ${NET_IF}..."
+
+cat > "${NETPLAN_FILE}" <<EOF
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ${NET_IF}:
+      dhcp4: false
+      addresses:
+        - ${IP_ADDR}
+      gateway4: ${GATEWAY}
+      nameservers:
+        addresses:
+          - ${DNS_SERVERS}
+EOF
+
+chmod 600 "${NETPLAN_FILE}"
+
+echo "[+] Applying netplan..."
+netplan generate > /dev/null 2>&1 || true
+netplan apply > /dev/null 2>&1 || true
+
+echo "[+] Restarting systemd-networkd..."
+systemctl restart systemd-networkd > /dev/null 2>&1 || true
+
 echo "[+] Updating apt cache..."
 apt-get update -y >/dev/null 2>&1 || true
 
