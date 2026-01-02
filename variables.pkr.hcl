@@ -83,6 +83,11 @@ variable "mgmt_bridge" {
   description = "Proxmox bridge for management/WAN NIC (net0)."
 }
 
+variable "blue_bridge" {
+  type        = string
+  description = "Proxmox bridge/VNET for blue network (net1)."
+}
+
 variable "cloud_init_storage_pool" {
   type        = string
   default     = "local-lvm"
@@ -112,6 +117,6 @@ variable "ssh_timeout" {
 # Optional: interface name inside guest to help plugin pick IP (can override if needed)
 variable "vm_interface" {
   type        = string
-  default     = "eth0"
+  default     = "ens18"
   description = "Guest NIC name used to detect IP (adjust if your guest uses a different name)."
 }

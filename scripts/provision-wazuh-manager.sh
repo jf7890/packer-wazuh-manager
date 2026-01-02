@@ -78,7 +78,7 @@ then enable and start filebeat:
   systemctl start filebeat
 EOF
 
-systemctl disable filebeat > /dev/null 2>&1 || true
-systemctl stop    filebeat > /dev/null 2>&1 || true
+systemctl enable filebeat > /dev/null 2>&1 || true
+systemctl start    filebeat > /dev/null 2>&1 || true
 
 echo "[+] Done."

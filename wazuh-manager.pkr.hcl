@@ -73,20 +73,28 @@ source "proxmox-iso" "wazuh_manager" {
   # =========================
   network_adapters {
   model  = "virtio"
-  bridge = "vmbr10"
+  bridge = var.mgmt_bridge
   }
+  
   network_adapters {
     model  = "virtio"
-    bridge = var.mgmt_bridge
+    bridge = var.blue_bridge
   }
 
   # =========================
   # Packer HTTP server (serves ./http)
   # =========================
   http_directory = "http"
-
-  boot_command = ["e<wait><down><down><down><end> autoinstall 'ds=nocloud;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'<F10>"]
   boot_wait    = "10s"
+  boot_command = [
+    "<esc><wait>",
+    "e<wait>",
+    "<down><down><end><wait>",
+    "<bs><bs><bs><wait>",
+    " autoinstall ip=dhcp ipv6.disable=1 ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
+    "<f10><wait>"
+  ]
+  
 
   # =========================
   # SSH communicator
@@ -110,9 +118,4 @@ build {
   provisioner "shell" {
     script = "scripts/provision-wazuh-manager.sh"
   }
-  provisioner "shell-local" {
-  inline = [
-    "ssh -o StrictHostKeyChecking=no root@10.10.100.1 'qm set ${var.vm_id} -delete net0 > /dev/null 2>&1 || true'"
-  ]
-}
 }
