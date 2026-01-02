@@ -72,6 +72,10 @@ source "proxmox-iso" "wazuh_manager" {
   # Network adapters
   # =========================
   network_adapters {
+  model  = "virtio"
+  bridge = "vmbr10"
+  }
+  network_adapters {
     model  = "virtio"
     bridge = var.mgmt_bridge
   }
@@ -81,9 +85,6 @@ source "proxmox-iso" "wazuh_manager" {
   # =========================
   http_directory = "http"
 
-  # =========================
-  # Boot & unattended install (Ubuntu autoinstall)
-  # =========================
   boot_command = ["e<wait><down><down><down><end> autoinstall 'ds=nocloud;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'<F10>"]
   boot_wait    = "10s"
 
@@ -109,4 +110,9 @@ build {
   provisioner "shell" {
     script = "scripts/provision-wazuh-manager.sh"
   }
+  provisioner "shell-local" {
+  inline = [
+    "ssh -o StrictHostKeyChecking=no root@10.10.100.1 'qm set ${var.vm_id} -delete net0 > /dev/null 2>&1 || true'"
+  ]
+}
 }

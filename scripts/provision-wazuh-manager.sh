@@ -5,7 +5,7 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 # Set static ip for Wazuh manager
-NET_IF="eth0"
+NET_IF="ens18"
 IP_ADDR="10.10.172.10/24"
 GATEWAY="10.10.172.1"
 DNS_SERVERS="1.1.1.1"
