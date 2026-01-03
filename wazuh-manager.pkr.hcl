@@ -11,103 +11,103 @@ locals {
   template_name = "${var.template_prefix}-${var.hostname}"
 }
 
-source "proxmox-iso" "wazuh_manager" {
-  # =========================
-  # Proxmox connection
-  # =========================
-  proxmox_url              = var.proxmox_url
+# ==========================================================
+# Proxmox Builder: Ubuntu 24.04 + Wazuh all-in-one stack
+# - net0: mgmt (vmbr10) used ONLY for Packer provisioning
+# - net1: blue (blue)  kept for the final template
+# ==========================================================
+source "proxmox-iso" "wazuh_stack" {
+  # ===== Proxmox connection =====
+  proxmox_url      = var.proxmox_url
+  username         = var.proxmox_username
+  token            = var.proxmox_token
+  node             = var.proxmox_node
   insecure_skip_tls_verify = var.proxmox_insecure_skip_tls_verify
-  username                 = var.proxmox_username
-  token                    = var.proxmox_token
-  node                     = var.proxmox_node
 
-  vm_id   = var.vm_id
-  vm_name = local.template_name
+  # NOTE: var.vm_id default = 0 (auto). If your plugin treats 0 as "set", change to a real ID.
+  vm_id = var.vm_id
 
+  # ===== Template identity =====
+  vm_name              = local.template_name
   template_name        = local.template_name
-  template_description = "Wazuh Manager on Ubuntu 24.04 (non-docker, key-only SSH)."
-  tags                 = "ubuntu;wazuh;manager;template"
+  template_description = "Ubuntu 24.04 + Wazuh all-in-one. Build uses net0(mgmt) then post-step keeps only blue NIC."
 
+  # ===== VM sizing =====
+  cores  = var.cpu_cores
+  memory = var.memory_mb
 
+  # ===== Boot ISO (already uploaded to Proxmox storage) =====
   boot_iso {
-    type             = "scsi"
-    iso_url          = "https://download.nus.edu.sg/mirror/ubuntu-releases/releases/24.04.3/ubuntu-24.04.3-live-server-amd64.iso"
-    iso_checksum     = "sha256:c3514bf0056180d09376462a7a1b4f213c1d6e8ea67fae5c25099c6fd3d8274b"
-    iso_storage_pool = var.iso_storage_pool
-    iso_download_pve = true
-    unmount          = true
+    iso_file  = "${var.iso_storage_pool}:iso/${var.iso_file}"
+    unmount   = true
   }
 
-  cores           = var.cpu_cores
-  sockets         = 1
-  cpu_type        = "host"
-  memory          = var.memory_mb
-  os              = "l26"
-  bios            = "seabios"
-  scsi_controller = "virtio-scsi-single"
-  qemu_agent      = true
-
-  # Packer lấy IP từ NIC nào
-  vm_interface = var.vm_interface
-
+  # ===== Disk =====
+  scsi_controller = "virtio-scsi-pci"
   disks {
     type         = "scsi"
     disk_size    = var.disk_size
     storage_pool = var.disk_storage_pool
     format       = "raw"
-    cache_mode   = "none"
-    io_thread    = true
-    discard      = true
   }
 
-network_adapters {
-  model       = "virtio"
-  bridge      = var.mgmt_bridge
-  mac_address = "repeatable"
-}
-network_adapters {
-  model       = "virtio"
-  bridge      = var.blue_bridge
-  mac_address = "repeatable"
-}
+  # ===== Network =====
+  # net0: mgmt NIC (temporary)
+  network_adapters {
+    model  = "virtio"
+    bridge = var.mgmt_bridge
+  }
 
-  # =========================
-  # Packer HTTP server (serves ./http)
-  # =========================
-  http_directory = "http"
-  boot_wait    = "10s"
-  boot_command = ["e<wait><down><down><down><end> autoinstall 'ds=nocloud;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'<F10>"]
-  
+  # net1: blue NIC (final)
+  network_adapters {
+    model  = "virtio"
+    bridge = var.blue_bridge
+  }
 
-  # =========================
-  # SSH communicator
-  # =========================
-  communicator         = "ssh"
+  # ===== Autoinstall seed served by Packer HTTP server =====
+  http_content = {
+    "/user-data" = templatefile("${path.root}/http/user-data.tpl", {
+      hostname             = var.hostname
+      ssh_public_key       = var.ssh_public_key
+      ubuntu_password_hash = var.ubuntu_password_hash
+    })
+    "/meta-data" = templatefile("${path.root}/http/meta-data.tpl", {
+      hostname = var.hostname
+    })
+  }
+
+  # ===== QEMU guest agent for IP discovery =====
+  qemu_agent = true
+
+  # ===== SSH (key-based, root) =====
   ssh_username         = var.ssh_username
-  ssh_port             = 22
-  ssh_timeout          = var.ssh_timeout
-  ssh_private_key_file = pathexpand(var.ssh_private_key_file)
+  ssh_private_key_file = var.ssh_private_key_file
+  ssh_timeout          = "60m"
 
-  # =========================
-  # Cloud-init CDROM after convert template
-  # =========================
+  # plugin reads the IP address for this interface from qemu-guest-agent
+  vm_interface         = var.vm_interface
+
+  # ===== Ubuntu autoinstall boot command =====
+  # This sequence is often the flakiest part and may need small adjustments.
+  boot_wait = "5s"
+  boot_command = [
+    "<esc><wait>",
+    "e<wait>",
+    "<down><down><down><end><wait>",
+    " autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ cloud-config-url=/dev/null net.ifnames=0 biosdevname=0 ---<wait>",
+    "<f10><wait>"
+  ]
+
+  # ===== Proxmox Cloud-Init drive (kept for clones; optional) =====
   cloud_init              = true
   cloud_init_storage_pool = var.cloud_init_storage_pool
 }
 
 build {
-  sources = ["source.proxmox-iso.wazuh_manager"]
+  name    = "wazuh-stack-ubuntu2404"
+  sources = ["source.proxmox-iso.wazuh_stack"]
 
   provisioner "shell" {
-    script = "scripts/provision-wazuh-manager.sh"
+    script = "${path.root}/scripts/provision-wazuh-manager.sh"
   }
-post-processor "shell-local" {
-  environment_vars = [
-    "PVE_HOST=10.10.100.1",
-    "PVE_USER=root",
-    "TEMPLATE_NAME=${local.template_name}",
-  ]
-
-  script = "scripts/pve-delete-net0.sh"
-}
 }
