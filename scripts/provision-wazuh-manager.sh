@@ -7,36 +7,6 @@ if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   exec sudo -n -E bash "$0" "$@"
 fi
 
-# -------------------------
-# Network static IP (NOTE: risky during packer build)
-# -------------------------
-NET_IF="ens18"
-IP_ADDR="10.10.172.10/24"
-GATEWAY="10.10.172.1"
-DNS_SERVERS="1.1.1.1"
-NETPLAN_FILE="/etc/netplan/01-static-ip.yaml"
-
-echo "[+] Writing netplan for ${NET_IF}..."
-
-cat > "${NETPLAN_FILE}" <<EOF
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    eth0:
-      dhcp4: false
-      addresses:
-        - 10.10.172.10/24
-      routes:
-        - to: default
-          via: 10.10.172.1
-      nameservers:
-        addresses:
-          - 1.1.1.1
-EOF
-
-sudo -n chmod 600 "${NETPLAN_FILE}" >/dev/null 2>&1 || true
-
 # SAFER: generate only. Apply/restart can drop SSH during build.
 echo "[+] Netplan generated (apply deferred)."
 netplan generate > /dev/null 2>&1 || true
