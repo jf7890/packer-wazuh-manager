@@ -4,7 +4,7 @@ proxmox_username = "root@pam!packer"
 proxmox_token    = "28786dd2-1eed-44e6-b8a4-dc2221ce384d"
 proxmox_node     = "homelab"
 proxmox_insecure_skip_tls_verify = true
-vm_id = 999
+vm_id = 0
 
 # ===== Template naming =====
 template_prefix = "tpl"

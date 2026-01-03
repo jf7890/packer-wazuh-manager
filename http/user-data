@@ -45,3 +45,6 @@ autoinstall:
     - curtin in-target -- sh -c "sed -i 's/^#\\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config > /dev/null 2>&1 || true"
     - curtin in-target -- sh -c "sed -i 's/^#\\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config > /dev/null 2>&1 || true"
     - curtin in-target -- sh -c "systemctl restart ssh > /dev/null 2>&1 || true"
+    - curtin in-target -- sh -c "sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"net.ifnames=0 biosdevname=0\"/' /etc/default/grub >/dev/null 2>&1 || true"
+    - curtin in-target -- sh -c "grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub || echo 'GRUB_CMDLINE_LINUX_DEFAULT=\"net.ifnames=0 biosdevname=0\"' >> /etc/default/grub"
+    - curtin in-target -- sh -c "update-grub >/dev/null 2>&1 || true"

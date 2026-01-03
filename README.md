@@ -32,6 +32,15 @@ Packer communicator requires you to provide **ssh_private_key_file** in your `.a
 ## Disk layout
 This template is **LVM-only** (Ubuntu autoinstall storage layout: `lvm`).
 
+Khi có Indexer thì “đúng bài” bạn nên làm trong script
+
+Ghi /etc/filebeat/filebeat.yml trỏ tới indexer
+
+Copy cert thật vào /etc/filebeat/certs/
+
+rồi mới enable --now filebeat
+
+
 ## Usage
 ```bash
 cd wazuh-manager-packer

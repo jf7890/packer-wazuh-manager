@@ -28,9 +28,7 @@ source "proxmox-iso" "wazuh_manager" {
   template_description = "Wazuh Manager on Ubuntu 24.04 (non-docker, key-only SSH)."
   tags                 = "ubuntu;wazuh;manager;template"
 
-  # =========================
-  # Boot ISO
-  # =========================
+
   boot_iso {
     type             = "scsi"
     iso_url          = "https://download.nus.edu.sg/mirror/ubuntu-releases/releases/24.04.3/ubuntu-24.04.3-live-server-amd64.iso"
@@ -40,9 +38,6 @@ source "proxmox-iso" "wazuh_manager" {
     unmount          = true
   }
 
-  # =========================
-  # VM hardware
-  # =========================
   cores           = var.cpu_cores
   sockets         = 1
   cpu_type        = "host"
@@ -55,9 +50,6 @@ source "proxmox-iso" "wazuh_manager" {
   # Packer lấy IP từ NIC nào
   vm_interface = var.vm_interface
 
-  # =========================
-  # Disk (đúng syntax như blueteam-router)
-  # =========================
   disks {
     type         = "scsi"
     disk_size    = var.disk_size
@@ -68,18 +60,16 @@ source "proxmox-iso" "wazuh_manager" {
     discard      = true
   }
 
-  # =========================
-  # Network adapters
-  # =========================
-  network_adapters {
-  model  = "virtio"
-  bridge = var.mgmt_bridge
-  }
-  
-  network_adapters {
-    model  = "virtio"
-    bridge = var.blue_bridge
-  }
+network_adapters {
+  model       = "virtio"
+  bridge      = var.mgmt_bridge
+  mac_address = "repeatable"
+}
+network_adapters {
+  model       = "virtio"
+  bridge      = var.blue_bridge
+  mac_address = "repeatable"
+}
 
   # =========================
   # Packer HTTP server (serves ./http)
@@ -118,4 +108,22 @@ build {
   provisioner "shell" {
     script = "scripts/provision-wazuh-manager.sh"
   }
+  post-processor "shell-local" {
+  environment_vars = [
+    "PVE_HOST=10.10.100.1",
+    "PVE_USER=root",
+    "TEMPLATE_NAME=${local.template_name}",
+  ]
+  inline = [
+    "bash -lc 'set -euo pipefail; " ..
+    "ssh -o StrictHostKeyChecking=no ${PVE_USER}@${PVE_HOST} " ..
+    "\"VMID=\\$(qm list | awk \\\"\\$2==\\\\\\\"${TEMPLATE_NAME}\\\\\\\" {print \\$1; exit}\\\"); " ..
+    "[ -n \\\"\\$VMID\\\" ] || exit 1; " ..
+    "for i in \\$(seq 1 30); do " ..
+    "  qm unlock \\$VMID >/dev/null 2>&1 || true; " ..
+    "  qm set \\$VMID -delete net0 >/dev/null 2>&1 && exit 0 || true; " ..
+    "  sleep 2; " ..
+    "done; exit 1\"'"
+  ]
+}
 }

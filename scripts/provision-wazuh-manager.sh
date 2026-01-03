@@ -23,19 +23,19 @@ network:
   version: 2
   renderer: networkd
   ethernets:
-    ${NET_IF}:
+    eth0:
       dhcp4: false
       addresses:
-        - ${IP_ADDR}
+        - 10.10.172.10/24
       routes:
         - to: default
-          via: ${GATEWAY}
+          via: 10.10.172.1
       nameservers:
         addresses:
-          - ${DNS_SERVERS}
+          - 1.1.1.1
 EOF
 
-chmod 600 "${NETPLAN_FILE}" || true
+sudo -n chmod 600 "${NETPLAN_FILE}" >/dev/null 2>&1 || true
 
 # SAFER: generate only. Apply/restart can drop SSH during build.
 echo "[+] Netplan generated (apply deferred)."
@@ -77,6 +77,11 @@ then enable and start filebeat:
   systemctl enable filebeat
   systemctl start filebeat
 EOF
+
+sudo -n tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg >/dev/null <<'EOF'
+network: {config: disabled}
+EOF
+sudo -n rm -f /etc/netplan/50-cloud-init.yaml >/dev/null 2>&1 || true
 
 systemctl enable filebeat > /dev/null 2>&1 || true
 systemctl start    filebeat > /dev/null 2>&1 || true
