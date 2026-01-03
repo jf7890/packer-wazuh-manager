@@ -115,8 +115,6 @@ post-processor "shell-local" {
     "TEMPLATE_NAME=${local.template_name}",
   ]
 
-  inline = [
-    "bash -lc 'set -euo pipefail; ssh -o StrictHostKeyChecking=no ${PVE_USER}@${PVE_HOST} \"VMID=$(qm list | awk \\\"\\$2==\\\\\\\"${TEMPLATE_NAME}\\\\\\\" {print \\$1; exit}\\\"); [ -n \\\"\\$VMID\\\" ] || exit 1; for i in $(seq 1 30); do qm unlock \\$VMID >/dev/null 2>&1 || true; qm set \\$VMID -delete net0 >/dev/null 2>&1 && exit 0 || true; sleep 2; done; exit 1\"'"
-  ]
+  script = "scripts/pve-delete-net0.sh"
 }
 }
