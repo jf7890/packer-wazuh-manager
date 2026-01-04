@@ -21,13 +21,17 @@ autoinstall:
     version: 2
     ethernets:
       ens18:
+        dhcp4: true
+        dhcp6: false
+        routes:
+        - to: default
+          via: 10.10.100.1
+
+      ens19:
         dhcp4: false
         dhcp6: false
         addresses:
           - 10.10.172.10/24
-        routes:
-          - to: default
-            via: 10.10.172.1
         nameservers:
           addresses:
             - 1.1.1.1

@@ -51,6 +51,12 @@ source "proxmox-iso" "wazuh_stack" {
     format       = "raw"
   }
 
+  # net0: mgmt
+  network_adapters {
+    model  = "virtio"
+    bridge = var.mgmt_bridge
+  }
+
   # net1: blue NIC (final)
   network_adapters {
     model  = "virtio"

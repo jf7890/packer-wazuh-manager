@@ -41,6 +41,11 @@ variable "iso_file" {
   default = "ubuntu-24.04.3-live-server-amd64.iso"
 }
 
+variable "mgmt_bridge" {
+  type    = string
+  default = env("PACKER_INTERNET_BRIDGE_CARD")
+}
+
 variable "blue_bridge" {
   type    = string
   default = "blue"
