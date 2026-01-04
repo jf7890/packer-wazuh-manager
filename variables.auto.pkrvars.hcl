@@ -11,8 +11,6 @@ cloud_init_storage_pool = "local-lvm"
 
 # ===== SSH key-based =====
 ssh_username         = "root"
-pri_key = "~/.ssh/id_ed25519"
-pub_key = "preset"
 vm_interface         = "ens18"
 
 # ===== Proxmox connection =====
