@@ -6,7 +6,7 @@ disk_size         = "40G"
 
 # ===== Storage / Network =====
 iso_storage_pool        = "hdd-data"
-blue_bridge             = "blue"
+#blue_bridge             = "blue"
 cloud_init_storage_pool = "local-lvm"
 
 # ===== SSH key-based =====

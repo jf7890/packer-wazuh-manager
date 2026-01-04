@@ -57,12 +57,6 @@ source "proxmox-iso" "wazuh_stack" {
     bridge = var.mgmt_bridge
   }
 
-  # net1: blue NIC (final)
-  network_adapters {
-    model  = "virtio"
-    bridge = var.blue_bridge
-  }
-
   # ===== Autoinstall seed served by Packer HTTP server =====
   http_content = {
     "/user-data" = templatefile("${path.root}/http/user-data.tpl", {

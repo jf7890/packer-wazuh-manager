@@ -46,11 +46,6 @@ variable "mgmt_bridge" {
   default = env("PACKER_INTERNET_BRIDGE_CARD")
 }
 
-variable "blue_bridge" {
-  type    = string
-  default = "blue"
-}
-
 variable "cloud_init_storage_pool" {
   type    = string
   default = "local-lvm"

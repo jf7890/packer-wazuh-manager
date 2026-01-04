@@ -25,16 +25,6 @@ autoinstall:
         dhcp6: false
         optional: true
 
-      ens19:
-        dhcp4: false
-        dhcp6: false
-        addresses:
-          - 10.10.172.10/24
-        nameservers:
-          addresses:
-            - 1.1.1.1
-        optional: true
-
   packages:
     - qemu-guest-agent
     - curl
