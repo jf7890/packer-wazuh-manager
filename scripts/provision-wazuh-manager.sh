@@ -65,7 +65,7 @@ rm -f /etc/netplan/50-cloud-init.yaml >/dev/null 2>&1 || true
 # Write SAFE netplan (keep default route on mgmt/ens18; blue/ens19 static only)
 NETPLAN_FILE="/etc/netplan/01-safe-template.yaml"
 cat > "${NETPLAN_FILE}" <<'EOF'
-  ens1:
+  ens18:
     dhcp4: false
     dhcp6: false
     addresses:
