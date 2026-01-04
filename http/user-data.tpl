@@ -17,23 +17,23 @@ autoinstall:
     authorized-keys:
       - ${pub_key}
 
-network:
-  version: 2
-  ethernets:
-    ens18:
-      dhcp4: true
-      dhcp6: false
-      optional: true
+  network:
+    version: 2
+    ethernets:
+      ens18:
+        dhcp4: true
+        dhcp6: false
+        optional: true
 
-    ens19:
-      dhcp4: false
-      dhcp6: false
-      addresses:
-        - 10.10.172.10/24
-      nameservers:
+      ens19:
+        dhcp4: false
+        dhcp6: false
         addresses:
-          - 1.1.1.1
-      optional: true
+          - 10.10.172.10/24
+        nameservers:
+          addresses:
+            - 1.1.1.1
+        optional: true
 
   packages:
     - qemu-guest-agent
