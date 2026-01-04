@@ -57,14 +57,12 @@ variable "ssh_username" {
   default = "root"
 }
 
-variable "ssh_private_key_file" {
+variable "pri_key" {
   type    = string
-  default = "~/.ssh/id_ed25519"
 }
 
-variable "ssh_public_key" {
+variable "pub_key" {
   type    = string
-  default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIC5JU9neFzrsWZKMtEJ1lTcWLvhvKqQUd80/Nla7oqT blue-router"
 }
 
 variable "vm_interface" {

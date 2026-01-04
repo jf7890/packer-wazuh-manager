@@ -61,7 +61,7 @@ source "proxmox-iso" "wazuh_stack" {
   http_content = {
     "/user-data" = templatefile("${path.root}/http/user-data.tpl", {
       hostname             = var.hostname
-      ssh_public_key       = var.ssh_public_key
+      pub_key       = var.pub_key
       ubuntu_password_hash = var.ubuntu_password_hash
     })
     "/meta-data" = templatefile("${path.root}/http/meta-data.tpl", {
@@ -74,7 +74,7 @@ source "proxmox-iso" "wazuh_stack" {
 
   # ===== SSH (key-based, root) =====
   ssh_username         = var.ssh_username
-  ssh_private_key_file = var.ssh_private_key_file
+  ssh_private_key_file = var.pri_key
   ssh_timeout          = "60m"
 
   # plugin reads the IP address for this interface from qemu-guest-agent

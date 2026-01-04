@@ -32,7 +32,7 @@ apt-get install -y wazuh-manager > /dev/null 2>&1 || true
 systemctl enable wazuh-manager > /dev/null 2>&1 || true
 systemctl start  wazuh-manager > /dev/null 2>&1 || true
 
-echo "[+] Installing filebeat (disabled by default)..."
+echo "[+] Installing filebeat..."
 apt-get install -y filebeat > /dev/null 2>&1 || true
 
 mkdir -p /etc/filebeat/certs > /dev/null 2>&1 || true
