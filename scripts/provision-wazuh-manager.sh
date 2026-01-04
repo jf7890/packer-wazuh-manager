@@ -2,14 +2,18 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
-# Re-run as root if needed (packer ssh user might be 'blue')
+# Re-run as root if needed
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   exec sudo -n -E bash "$0" "$@"
 fi
 
-# SAFER: generate only. Apply/restart can drop SSH during build.
-echo "[+] Netplan generated (apply deferred)."
+echo "[+] Starting Wazuh manager provisioning..."
+
 netplan generate > /dev/null 2>&1 || true
+echo "[+] Netplan generated (apply deferred)."
+
+
+# Packages
 
 echo "[+] Updating apt cache..."
 apt-get update -y > /dev/null 2>&1 || true
@@ -48,73 +52,74 @@ then enable and start filebeat:
   systemctl start filebeat
 EOF
 
-sudo -n tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg >/dev/null <<'EOF'
+# Make netplan stable across boots (cloud-init must not rewrite it)
+
+mkdir -p /etc/cloud/cloud.cfg.d >/dev/null 2>&1 || true
+cat > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg <<'EOF'
 network: {config: disabled}
 EOF
-sudo -n rm -f /etc/netplan/50-cloud-init.yaml >/dev/null 2>&1 || true
 
-systemctl enable filebeat > /dev/null 2>&1 || true
+# Remove cloud-init generated netplan so ours is authoritative
+rm -f /etc/netplan/50-cloud-init.yaml >/dev/null 2>&1 || true
 
-systemctl stop wazuh-manager  > /dev/null 2>&1 || true
-systemctl stop filebeat       > /dev/null 2>&1 || true
+# Write SAFE netplan (keep default route on mgmt/ens18; blue/ens19 static only)
+NETPLAN_FILE="/etc/netplan/01-safe-template.yaml"
+cat > "${NETPLAN_FILE}" <<'EOF'
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens18:
+      dhcp4: true
+      dhcp6: false
+      optional: true
+
+    ens19:
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 10.10.172.10/24
+      nameservers:
+        addresses:
+          - 1.1.1.1
+      optional: true
+EOF
+chmod 0644 "${NETPLAN_FILE}" >/dev/null 2>&1 || true
+
+# Apply netplan at the end of build (still safe: no route flip)
+netplan generate > /dev/null 2>&1 || true
+netplan apply    > /dev/null 2>&1 || true
+
+systemctl stop wazuh-manager > /dev/null 2>&1 || true
+systemctl stop filebeat      > /dev/null 2>&1 || true
+systemctl disable filebeat   > /dev/null 2>&1 || true
 
 sleep 10 || true
 sync || true
-set -eux
 
-echo "[+] Template cleanup (remove users/keys/identity)..."
+echo "[+] Template cleanup (keys/identity/logs)..."
 
-# 1) Remove authorized_keys (temporary build key)
+# Remove build-time keys
 rm -f /root/.ssh/authorized_keys || true
 rm -f /home/ubuntu/.ssh/authorized_keys || true
 
-# (Tuỳ bạn) nếu muốn giữ user ubuntu nhưng không cho password đăng nhập:
+# Lock passwords (optional but recommended for template)
 passwd -l ubuntu > /dev/null 2>&1 || true
-# khoá root (khuyến nghị nếu bạn muốn clone chỉ đăng nhập qua cloud-init injected key)
-passwd -l root > /dev/null 2>&1 || true
+passwd -l root   > /dev/null 2>&1 || true
 
-# 2) Reset SSH host keys (để clone mỗi máy tự generate)
+# Reset SSH host keys so clones regenerate unique keys
 rm -f /etc/ssh/ssh_host_* || true
 
-# 3) Cloud-init: clean để clone chạy lại và nhận key mới từ Proxmox Cloud-Init
+# cloud-init clean so clone will re-run datasource and accept injected key
 if command -v cloud-init >/dev/null 2>&1; then
   cloud-init clean --logs > /dev/null 2>&1 || true
 fi
 
-# 4) Reset machine-id (tránh clone trùng identity)
+# Reset machine-id
 truncate -s 0 /etc/machine-id || true
 rm -f /var/lib/dbus/machine-id || true
 
-# 5) Dọn logs
-find /var/log -type f -exec truncate -s 0 {} \; || true
-
-sync || true
-set -eux
-
-echo "[+] Template cleanup (remove users/keys/identity)..."
-
-# 1) Remove authorized_keys (temporary build key)
-rm -f /root/.ssh/authorized_keys || true
-rm -f /home/ubuntu/.ssh/authorized_keys || true
-
-# (Tuỳ bạn) nếu muốn giữ user ubuntu nhưng không cho password đăng nhập:
-passwd -l ubuntu > /dev/null 2>&1 || true
-# khoá root (khuyến nghị nếu bạn muốn clone chỉ đăng nhập qua cloud-init injected key)
-passwd -l root > /dev/null 2>&1 || true
-
-# 2) Reset SSH host keys (để clone mỗi máy tự generate)
-rm -f /etc/ssh/ssh_host_* || true
-
-# 3) Cloud-init: clean để clone chạy lại và nhận key mới từ Proxmox Cloud-Init
-if command -v cloud-init >/dev/null 2>&1; then
-  cloud-init clean --logs > /dev/null 2>&1 || true
-fi
-
-# 4) Reset machine-id (tránh clone trùng identity)
-truncate -s 0 /etc/machine-id || true
-rm -f /var/lib/dbus/machine-id || true
-
-# 5) Dọn logs
+# Clear logs
 find /var/log -type f -exec truncate -s 0 {} \; || true
 
 sync || true
