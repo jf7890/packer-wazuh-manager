@@ -128,5 +128,6 @@ build {
       "systemctl restart wazuh-manager > /dev/null 2>&1 || true",
       "systemctl restart filebeat      > /dev/null 2>&1 || true",
     ]
+    execute_command = "bash -c '{{ .Vars }} {{ .Path }}'"
   }
 }
