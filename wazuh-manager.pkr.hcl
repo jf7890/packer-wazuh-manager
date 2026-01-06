@@ -105,7 +105,7 @@ build {
   }
   provisioner "shell" {
     inline = [
-      "set -euo pipefail",
+      "set -eu",
 
       # Ensure dirs exist
       "install -d -m 0750 /var/ossec/etc/rules || true",
