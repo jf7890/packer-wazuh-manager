@@ -44,7 +44,6 @@ chmod 0644 "${NETPLAN_FILE}" >/dev/null 2>&1 || true
 
 # Generate/apply netplan (nếu bạn sợ rớt SSH, có thể comment dòng apply)
 netplan generate >/dev/null 2>&1 || true
-netplan apply    >/dev/null 2>&1 || true
 
 # ----------------------------
 # Install prerequisites
