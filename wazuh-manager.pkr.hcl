@@ -103,31 +103,4 @@ build {
   provisioner "shell" {
     script = "${path.root}/scripts/provision-wazuh-manager.sh"
   }
-  provisioner "shell" {
-    inline = [
-      "set -eu",
-
-      # Ensure dirs exist
-      "install -d -m 0750 /var/ossec/etc/rules || true",
-      "install -d -m 0755 /etc/filebeat || true",
-
-      # Backup existing configs (optional)
-      "if [ -f /var/ossec/etc/ossec.conf ]; then cp -a /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.bak || true; fi",
-      "if [ -f /var/ossec/etc/rules/local_rules.xml ]; then cp -a /var/ossec/etc/rules/local_rules.xml /var/ossec/etc/rules/local_rules.xml.bak || true; fi",
-      "if [ -f /etc/filebeat/filebeat.yml ]; then cp -a /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.bak || true; fi",
-
-      # Move uploaded files into place
-      "install -m 0640 /tmp/ossec.conf /var/ossec/etc/ossec.conf",
-      "install -m 0640 /tmp/local_rules.xml /var/ossec/etc/rules/local_rules.xml",
-      "install -m 0644 /tmp/filebeat.yml /etc/filebeat/filebeat.yml",
-
-      # Ownership (root:ossec)
-      "chown root:ossec /var/ossec/etc/ossec.conf /var/ossec/etc/rules/local_rules.xml 2>/dev/null || true",
-
-      # Restart safely
-      "systemctl restart wazuh-manager > /dev/null 2>&1 || true",
-      "systemctl restart filebeat      > /dev/null 2>&1 || true",
-    ]
-    execute_command = "bash -c '{{ .Vars }} {{ .Path }}'"
-  }
 }
