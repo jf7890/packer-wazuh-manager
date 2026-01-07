@@ -1,8 +1,8 @@
 # ===== VM sizing =====
-cpu_cores = 4
-memory_mb = 8192
+cpu_cores = 8
+memory_mb = 10240
 disk_storage_pool = "hdd-lvm"
-disk_size         = "40G"
+disk_size         = "50G"
 
 # ===== Storage / Network =====
 iso_storage_pool        = "hdd-data"
