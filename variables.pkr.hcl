@@ -59,7 +59,7 @@ variable "ssh_username" {
 
 variable "pri_key" {
   type    = string
-  default     = env("PACKER_SSH_PRIVATE_KEY")
+  default     = env("PACKER_SSH_PRIVATE_KEY_FILE")
 }
 
 variable "pub_key" {
