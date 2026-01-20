@@ -56,7 +56,7 @@ netplan generate >/dev/null 2>&1 || true
 # ----------------------------
 echo "[+] Installing prerequisites..."
 apt-get update -y >/dev/null 2>&1 || true
-apt-get install -y curl tar ca-certificates >/dev/null 2>&1 || true
+apt-get install -y curl tar ca-certificates jq >/dev/null 2>&1 || true
 
 # ----------------------------
 # Wazuh AIO install (Quickstart)
