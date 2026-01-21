@@ -8,7 +8,9 @@ build {
   }
 
   provisioner "shell" {
-    script = "/tmp/wazuh-scripts/provision-wazuh-manager.sh"
-    execute_command = "cd /tmp/wazuh-scripts; chmod +x provision-wazuh-manager.sh; sudo -n -E bash provision-wazuh-manager.sh"
+    inline = [
+      "chmod +x /tmp/wazuh-scripts/provision-wazuh-manager.sh",
+      "cd /tmp/wazuh-scripts && sudo -n -E bash ./provision-wazuh-manager.sh"
+    ]
   }
 }
