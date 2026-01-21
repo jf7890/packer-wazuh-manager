@@ -75,7 +75,7 @@ source "proxmox-iso" "wazuh_stack" {
 
   # ===== SSH (key-based, root) =====
   ssh_username         = var.ssh_username
-  ssh_private_key_file = var.pri_key
+  ssh_private_key      = var.pri_key
   ssh_timeout          = "60m"
 
   # plugin reads the IP address for this interface from qemu-guest-agent
