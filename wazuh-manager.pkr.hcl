@@ -62,7 +62,7 @@ source "proxmox-iso" "wazuh_stack" {
   http_content = {
     "/user-data" = templatefile("${path.root}/http/user-data.tpl", {
       hostname             = var.hostname
-      pub_key       = var.pub_key
+      pub_key       = var.ssh_public_key
       ubuntu_password_hash = var.ubuntu_password_hash
     })
     "/meta-data" = templatefile("${path.root}/http/meta-data.tpl", {
