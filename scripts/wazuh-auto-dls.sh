@@ -90,11 +90,48 @@ call_indexer() {
   fi
 }
 
+fetch_agents_api() {
+  local status="$1"
+  local output parsed
+  output=$(curl -sk --connect-timeout 5 --max-time 10 \
+    -H "Authorization: Bearer ${WAZUH_TOKEN}" \
+    "${WAZUH_API_URL}/agents?status=${status}&limit=5000" 2>/dev/null || true)
+  if echo "$output" | jq -e '.data.affected_items' >/dev/null 2>&1; then
+    parsed=$(echo "$output" | jq -r '.data.affected_items[]? | "\(.id)|\(.name)"')
+    if [[ -n "$parsed" ]]; then
+      echo "$parsed"
+    fi
+    return 0
+  fi
+  return 1
+}
+
+fetch_agents_from_agent_control() {
+  local status="$1"
+  local flag=""
+  if [[ ! -x /var/ossec/bin/agent_control ]]; then
+    return 1
+  fi
+  if [[ "$status" == "active" ]]; then
+    flag="-lc"
+  elif [[ "$status" == "disconnected" ]]; then
+    flag="-ln"
+  else
+    return 1
+  fi
+  /var/ossec/bin/agent_control "$flag" 2>/dev/null \
+    | awk 'match($0, /ID: ([0-9]+), Name: ([^,]+)/, m) { if (m[1] != "000") print m[1] "|" m[2] }'
+}
+
 fetch_agents() {
   local status="$1"
-  curl -sk -H "Authorization: Bearer ${WAZUH_TOKEN}" \
-    "${WAZUH_API_URL}/agents?status=${status}&limit=5000" \
-    | jq -r '.data.affected_items[] | "\(.id)|\(.name)"'
+  local api_output
+  api_output="$(fetch_agents_api "$status" || true)"
+  if [[ -n "$api_output" ]]; then
+    echo "$api_output"
+    return 0
+  fi
+  fetch_agents_from_agent_control "$status" || true
 }
 
 load_state() {
@@ -174,7 +211,13 @@ teardown_agent() {
   call_indexer "DELETE" "/_plugins/_security/api/roles/${role}" >/dev/null 2>&1 || true
 
   if [[ -x /var/ossec/bin/manage_agents ]]; then
-    /var/ossec/bin/manage_agents -r "${agent_id}" -f >/dev/null 2>&1 || true
+    local out rc
+    out="$(printf 'y\n' | /var/ossec/bin/manage_agents -r "${agent_id}" 2>&1)" || rc=$?
+    if [[ -z "${rc:-}" ]]; then
+      LOG "Removed agent ID ${agent_id} via manage_agents -r"
+    else
+      LOG "Failed to remove agent ID ${agent_id} via manage_agents -r (rc=${rc:-1}): ${out}"
+    fi
   fi
 
   unset STATE_USER["$agent_id"]
