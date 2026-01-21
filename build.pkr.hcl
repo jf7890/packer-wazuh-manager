@@ -2,9 +2,13 @@ build {
   name    = "wazuh-stack-ubuntu2404"
   sources = ["source.proxmox-iso.wazuh_stack"]
 
+  provisioner "shell" {
+    inline = ["mkdir -p /tmp/wazuh-scripts"]
+  }
+
   provisioner "file" {
     source      = "${path.root}/scripts/"
-    destination = "/tmp/wazuh-scripts"
+    destination = "/tmp/wazuh-scripts/"
   }
 
   provisioner "shell" {
