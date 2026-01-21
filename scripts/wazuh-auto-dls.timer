@@ -1,4 +1,4 @@
-﻿[Unit]
+[Unit]
 Description=Run Wazuh auto DLS role/user sync periodically
 
 [Timer]

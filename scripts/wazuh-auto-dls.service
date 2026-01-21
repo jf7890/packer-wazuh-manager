@@ -1,4 +1,4 @@
-﻿[Unit]
+[Unit]
 Description=Auto-manage per-agent DLS roles/users for Wazuh
 After=network.target wazuh-manager.service wazuh-indexer.service
 

@@ -93,6 +93,8 @@ echo "[+] Installing wazuh-auto-dls automation (script + systemd)..."
 install -m 0700 "${SCRIPT_DIR}/wazuh-auto-dls.sh" /usr/local/sbin/wazuh-auto-dls.sh
 install -m 0644 "${SCRIPT_DIR}/wazuh-auto-dls.service" /etc/systemd/system/wazuh-auto-dls.service
 install -m 0644 "${SCRIPT_DIR}/wazuh-auto-dls.timer" /etc/systemd/system/wazuh-auto-dls.timer
+sed -i '1s/^\xEF\xBB\xBF//' /usr/local/sbin/wazuh-auto-dls.sh /etc/systemd/system/wazuh-auto-dls.service /etc/systemd/system/wazuh-auto-dls.timer || true
+sed -i 's/\r$//' /usr/local/sbin/wazuh-auto-dls.sh /etc/systemd/system/wazuh-auto-dls.service /etc/systemd/system/wazuh-auto-dls.timer || true
 systemctl daemon-reload >/dev/null 2>&1 || true
 systemctl enable wazuh-auto-dls.timer >/dev/null 2>&1 || true
 

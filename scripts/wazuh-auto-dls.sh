@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -131,7 +131,7 @@ ensure_role() {
     --arg aid "$agent_id" \
     '{cluster_permissions:["cluster_composite_ops_ro","indices:data/read/search/template/render"],
       index_permissions:[{index_patterns:["wazuh-alerts-*","wazuh-archives-*"],allowed_actions:["read","indices:data/read/search"],dls:("{\"term\":{\"agent.id\":\"" + $aid + "\"}}")}],
-      tenant_permissions:[{tenant_patterns:["global_tenant"],allowed_actions:["kibana_all_read"]}]}')
+      tenant_permissions:[{tenant_patterns:["global_tenant"],allowed_actions:["kibana_all_read"]}]}' )
   call_indexer "PUT" "/_plugins/_security/api/roles/${role}" "$role_body"
 
   local user_body
