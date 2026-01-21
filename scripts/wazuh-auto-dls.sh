@@ -118,8 +118,8 @@ ensure_roles_mapping_add_user() {
   local role="$1" user="$2"
   local existing body
   existing=$(call_indexer "GET" "/_plugins/_security/api/rolesmapping/${role}" || true)
-  if echo "$existing" | jq -e --arg role "$role" 'type == "object" and has($role) and (.[$role] | type == "object")' >/dev/null 2>&1; then
-    body=$(echo "$existing" | jq --arg u "$user" --arg role "$role" '.[$role] as $r | {users:(($r.users // []) + [$u] | unique), backend_roles:($r.backend_roles // []), hosts:($r.hosts // [])}')
+  if echo "$existing" | jq -e '.[keys[0]]' >/dev/null 2>&1; then
+    body=$(echo "$existing" | jq --arg u "$user" '.[keys[0]] as $r | {users:(($r.users // []) + [$u] | unique), backend_roles:($r.backend_roles // []), hosts:($r.hosts // [])}')
   else
     body=$(jq -nc --arg u "$user" '{users:[$u], backend_roles:[], hosts:[]}')
   fi
@@ -155,10 +155,10 @@ remove_user_from_mapping() {
   local role="$1" user="$2"
   local existing body
   existing=$(call_indexer "GET" "/_plugins/_security/api/rolesmapping/${role}" || true)
-  if ! echo "$existing" | jq -e --arg role "$role" 'type == "object" and has($role) and (.[$role] | type == "object")' >/dev/null 2>&1; then
+  if ! echo "$existing" | jq -e '.[keys[0]]' >/dev/null 2>&1; then
     return 0
   fi
-  body=$(echo "$existing" | jq --arg u "$user" --arg role "$role" '.[$role] as $r | {users:(($r.users // []) - [$u]), backend_roles:($r.backend_roles // []), hosts:($r.hosts // [])}')
+  body=$(echo "$existing" | jq --arg u "$user" '.[keys[0]] as $r | {users:(($r.users // []) - [$u]), backend_roles:($r.backend_roles // []), hosts:($r.hosts // [])}')
   call_indexer "PUT" "/_plugins/_security/api/rolesmapping/${role}" "$body"
 }
 
